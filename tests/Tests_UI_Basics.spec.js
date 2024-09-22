@@ -31,7 +31,7 @@ test('Web Browser Context Validation', async ({page}) => {
     console.log(await page.locator(".card-body a").allTextContents());
 });
 
-test.only('UI Controls', async ({page}) => {
+test('UI Controls', async ({page}) => {
     await page.goto("http://rahulshettyacademy.com/loginpagePractise/");
     await page.locator("input[id='username']").fill("rahulshettyacademy");
     await page.locator("input[id='password']").fill("learning");
@@ -51,5 +51,24 @@ test.only('UI Controls', async ({page}) => {
     const documentsLink = page.locator("a[href*='documents-request']");
     await expect(documentsLink).toHaveAttribute("class", "blinkingText");
 
+    await page.locator("#signInBtn").click();
+});
+
+test.only("Child windows handling", async ({browser}) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto("http://rahulshettyacademy.com/loginpagePractise/");
+    const documentsLink = page.locator("a[href*='documents-request']");
+    const [newPage] = await Promise.all([
+        context.waitForEvent("page"),
+        documentsLink.click(),
+    ]);
+    await expect(newPage).toHaveTitle("RS Academy");
+    const extractedUsername = (await newPage.locator(".red").textContent()).split("@")[1].split(".")[0];
+    console.log(extractedUsername);
+    
+    await page.locator("input[id='username']").fill(extractedUsername);
+    console.log(await page.locator("input[id='username']").textContent());
+    await page.locator("input[id='password']").fill("learning");
     await page.locator("#signInBtn").click();
 });
